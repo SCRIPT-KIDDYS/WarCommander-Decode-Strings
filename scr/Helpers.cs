@@ -116,7 +116,7 @@ namespace WarCommander_Decode_Strings
             foreach (string path in filePath)
             {
                 string originalText = File.ReadAllText(path);
-                string regexPattern = @"class_2.method_7\(-([0-9]*)\)";
+                string regexPattern = @"\(-([0-9]\d{9})\)";
                 Match match = Regex.Match(originalText, regexPattern);
                 if (match.Success)
                 {
