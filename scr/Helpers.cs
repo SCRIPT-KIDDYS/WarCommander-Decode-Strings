@@ -11,13 +11,9 @@ namespace WarCommander_Decode_Strings
 
         public static List<byte[]> binaryDatas = new List<byte[]>();
 
-        public static string bin1 = @"WCFiles\1.bin";
+        public static string[] binHolder;
 
-        public static string bin2 = @"WCFiles\2.bin";
-
-        public static string bin3 = @"WCFiles\3.bin";
-
-        public static string ScriptFolderPath = @"WCFiles\scripts";
+        public static string ScriptFolderPath;
 
         public static string ERROR = $">>::ERROR::<<{Environment.NewLine}";
 
@@ -45,32 +41,36 @@ namespace WarCommander_Decode_Strings
             "Type: Yes to create it and rescan",
             "Press ENTER to exit");
 
+        public static void binLocation() // InProcess
+        {
+            // Drag and Drop folder
+            // OR
+            // Drag and drop each file
+            Console.WriteLine($"{INFO}Drop the folder that contains the 3 bin files and press ENTER");
+            binHolder = Directory.GetFiles(Console.ReadLine(), "*.bin");
+            if (binHolder.Length == 3)
+            {
+                CheckFiles();
+            }
+            Console.WriteLine($"Could only find '{binHolder.Length}' bin files.");
+            Environment.Exit(0);
+        }
 
         public static void CheckFiles()
         {
+
             Console.Clear();
             binaryDatas.Clear();
 
             int missingBinfile = 0;
             int missingScriptFolder = 0;
 
-            if (!Directory.Exists(@"WCFiles"))
-            {
-                Console.WriteLine($"{ERROR}{WCFilesDoesntExist}");
-                if (Console.ReadLine().ToLower() == "yes")
-                { Directory.CreateDirectory("WCFiles"); CheckFiles(); }
-                else { Environment.Exit(0); }
-            }
-            if (!File.Exists(bin1))
-            { Console.WriteLine($"{ERROR}'{bin1}' is missing.{Environment.NewLine}"); missingBinfile++; }
-            if (!File.Exists(bin2))
-            { Console.WriteLine($"{ERROR} {bin2} is missing.{Environment.NewLine}"); missingBinfile++; }
-            if (!File.Exists(bin3))
-            { Console.WriteLine($"{ERROR} {bin3} is missing.{Environment.NewLine}"); missingBinfile++; }
             if (!Directory.Exists(ScriptFolderPath))
             { Console.WriteLine($"{ERROR} {ScriptFolderPath} is missing.{Environment.NewLine}"); }
+
             if (missingBinfile == 0 && missingScriptFolder == 0)
-            { SetupDecoder(); }
+            { } //SetupDecoder(); }
+
             else
             {
                 Console.WriteLine(ERROR + BinFilesMissing);
@@ -78,20 +78,21 @@ namespace WarCommander_Decode_Strings
                 { CheckFiles(); }
                 else { Environment.Exit(0); }
             }
+            Environment.Exit(0);
         }
 
         private static void SetupDecoder()
         {
             Console.Clear();
             Console.WriteLine(string.Join(Environment.NewLine,
-                "Found - " + bin1,
-                "Found - " + bin2,
-                "Found - " + bin3,
+                $"Found - {binHolder[0]}",
+                $"Found - {binHolder[1]}",
+                $"Found - {binHolder[2]}",
                 "Found - " + ScriptFolderPath));
 
-            binaryDatas.Add(File.ReadAllBytes(bin1));
-            binaryDatas.Add(File.ReadAllBytes(bin2));
-            binaryDatas.Add(File.ReadAllBytes(bin3));
+            binaryDatas.Add(File.ReadAllBytes(binHolder[0]));
+            binaryDatas.Add(File.ReadAllBytes(binHolder[1]));
+            binaryDatas.Add(File.ReadAllBytes(binHolder[2]));
 
             Console.WriteLine($"{Environment.NewLine}{WARNING}{LastChance}");
 
@@ -108,22 +109,22 @@ namespace WarCommander_Decode_Strings
             foreach (string path in filePath)
             {
                 string originalText = File.ReadAllText(path);
-                string regexPattern = @"\(-([0-9]\d{9})\)";
+                string regexPattern = @"class_2.method_7\(-([0-9]*)\)";
                 Match match = Regex.Match(originalText, regexPattern);
                 if (match.Success)
                 {
                     string result = Regex.Replace(originalText, regexPattern, m =>
                      {
                          int value = -(Convert.ToInt32(m.Groups[1].Value));
-                         return "==[[ " + Class_2.GetDefinitionName(value, Helpers.binaryDatas) + " ]]==";
+                         return "==[[ " + Class_2.GetDefinitionName(value, binaryDatas) + " ]]==";
                      });
 
                     Console.WriteLine("FOUND - " + path);
-                    File.WriteAllText(path.Remove(path.Length - 3) + "___DECODED.as", result);
+                    //File.WriteAllText(path.Remove(path.Length - 3) + "___DECODED.as", result);
                     fileCount++;
                 }
             }
-            Console.WriteLine($"{Environment.NewLine}{INFO}{fileCount} {Helpers.Exit}");
+            Console.WriteLine($"{Environment.NewLine}{INFO}{fileCount} {Exit}");
             Console.ReadLine();
             Environment.Exit(0);
         }

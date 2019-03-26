@@ -4,7 +4,7 @@ namespace WarCommander_Decode_Strings
 {
     class Program
     {
-        static void Main(string[] args) => Helpers.CheckFiles();
+        static void Main(string[] args) => Helpers.binLocation();
 
         private void WillUseLater()
         {
