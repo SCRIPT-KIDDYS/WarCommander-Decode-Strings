@@ -11,13 +11,7 @@ namespace WarCommander_Decode_Strings
 
         public static List<byte[]> binaryDatas = new List<byte[]>();
 
-        public static string bin1;
-
-        public static string bin2;
-
-        public static string bin3;
-
-        public static string binFiles; // Is this needed? 
+        public static List<string[]> binHolder = new List<string[]>();
 
         public static string ScriptFolderPath;
 
@@ -47,59 +41,86 @@ namespace WarCommander_Decode_Strings
             "Type: Yes to create it and rescan",
             "Press ENTER to exit");
 
-        public static void FoldervsFile()
+        public static void binLocation() // InProcess
         {
-            // Drag and Drop folder
-            // OR
-            // Drag and drop each file
-        }
-
-        public static void CheckFiles()
-        {
-
             Console.Clear();
+            binHolder.Clear();
             binaryDatas.Clear();
+            Console.WriteLine($"{INFO}Drop the folder that contains the 3 bin files and press ENTER");
+            string path = Console.ReadLine();
+            if (Directory.Exists(path))
+            {
+                binHolder.Add(Directory.GetFiles(path, "*.bin"));
+                foreach (string[] bins in binHolder)
+                {
+                    if (bins.Length == 3)
+                    {
+                        foreach (string[] binfiles in binHolder)
+                            for (int i = 0; i < binfiles.Length; i++)
+                            {
+                                string poop = binfiles[i];
+                                binaryDatas.Add(File.ReadAllBytes(binfiles[i]));
+                            }
+                        scriptsLocation();
+                    }
+                    if (bins.Length > 3)
+                    {
+                        Console.Clear();
+                        Console.WriteLine($"{WARNING}Was looking for 3 bin files, but found '{bins.Length}'{Environment.NewLine}Fix files and press ENTER to search again.");
+                    }
+                    else
+                    {
+                        Console.Clear();
+                        Console.WriteLine($"{WARNING}Could only find '{bins.Length}' of the 3 bin files.{Environment.NewLine}Fix files and press ENTER to search again.");
+                    }
+                }
+                Console.ReadLine();
+                binLocation();
 
-            int missingBinfile = 0;
-            int missingScriptFolder = 0;
-
-            if (!File.Exists(bin1))
-            { Console.WriteLine($"{ERROR}'1.bin' is missing.{Environment.NewLine}"); missingBinfile++; }
-
-            if (!File.Exists(bin2))
-            { Console.WriteLine($"{ERROR}'2.bin' is missing.{Environment.NewLine}"); missingBinfile++; }
-
-            if (!File.Exists(bin3))
-            { Console.WriteLine($"{ERROR}'3.bin' is missing.{Environment.NewLine}"); missingBinfile++; }
-
-            if (!Directory.Exists(ScriptFolderPath))
-            { Console.WriteLine($"{ERROR} {ScriptFolderPath} is missing.{Environment.NewLine}"); }
-            
-            if (missingBinfile == 0 && missingScriptFolder == 0)
-            { } //SetupDecoder(); }
-            
+            }
             else
             {
-                Console.WriteLine(ERROR + BinFilesMissing);
-                if (Console.ReadLine().ToLower() == "retry")
-                { CheckFiles(); }
-                else { Environment.Exit(0); }
+                Console.Clear();
+                Console.WriteLine($"{WARNING}No path detected{Environment.NewLine}Fix files and press ENTER to search again.");
+                Console.ReadLine();
+                binLocation();
             }
+
+            Environment.Exit(0);
+        }
+
+        public static void scriptsLocation()
+        {
+            Console.Clear();
+
+            Console.WriteLine($"{INFO}Drop the folder that contains the scripts files and press ENTER");
+            string path = Console.ReadLine();
+
+            if (!Directory.Exists(path))
+            {
+                Console.Clear();
+                Console.WriteLine($"{WARNING}No path detected{Environment.NewLine}Fix files and press ENTER to search again.");
+                Console.ReadLine();
+                scriptsLocation();
+            }
+            else
+            {
+                ScriptFolderPath = path;
+                SetupDecoder();
+            }
+
             Environment.Exit(0);
         }
 
         private static void SetupDecoder()
         {
             Console.Clear();
-            Console.WriteLine(string.Join(Environment.NewLine,
-                "Found - 1.bin",
-                "Found - 2.bin",
-                "Found - 3.bin",
-                "Found - " + ScriptFolderPath));
-
-            binaryDatas.Add(File.ReadAllBytes(binFiles + "1.bin"));
-            binaryDatas.Add(File.ReadAllBytes(binFiles + "2.bin"));
-            binaryDatas.Add(File.ReadAllBytes(binFiles + "3.bin"));
+            foreach (string[] binFiles in binHolder)
+            {
+                foreach (string binLocation in binFiles)
+                { Console.WriteLine($"Found - {binLocation}{Environment.NewLine}"); }
+            }
+            Console.WriteLine($"Found - {ScriptFolderPath}{Environment.NewLine}");
 
             Console.WriteLine($"{Environment.NewLine}{WARNING}{LastChance}");
 
@@ -107,6 +128,8 @@ namespace WarCommander_Decode_Strings
             { Environment.Exit(0); }
             else
             { DecodeStrings(); }
+
+            Environment.Exit(0);
         }
 
         private static void DecodeStrings()
@@ -127,7 +150,7 @@ namespace WarCommander_Decode_Strings
                      });
 
                     Console.WriteLine("FOUND - " + path);
-                    //File.WriteAllText(path.Remove(path.Length - 3) + "___DECODED.as", result);
+                    File.WriteAllText(path.Remove(path.Length - 3) + "___DECODED.as", result);
                     fileCount++;
                 }
             }
